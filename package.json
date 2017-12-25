@@ -1,0 +1,33 @@
+{
+  "name": "test-webbluetooth",
+  "author": {
+    "name": "yagamy",
+    "email": "yagamy@gmail.com"
+  },
+  "description": "A simple web server to test WebBluetooth APIs, to connect to several know BLE peripherals",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "engines": {
+    "node": "4.4.x"
+  },
+  "scripts": {
+    "server": "./node_modules/budo/bin/cmd.js \\\n  --open \\\n  --verbose \\\n  --live \\\n  --host 127.0.0.1 \\\n  --watch-glob '**/*.{html,css,jade}' \\\n  --css bootstrap.min.css \\\n  --dir $(pwd)/assets \\\n  $(pwd)/lib/entry.ls \\\n  -- -t [ browserify-livescript --extensions .ls ]"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "budo": "*",
+    "pug": "*",
+    "browserify-livescript": "*"
+  },
+  "optionalDependencies": {},
+  "keywords": [
+    "ble",
+    "binary",
+    "cb1",
+    "foop"
+  ],
+  "license": "ISC"
+}

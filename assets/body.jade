@@ -1,0 +1,24 @@
+link(rel="stylesheet" href="xterm.css")
+script(src="xterm.js")
+script(src="sensorweb3-client.js")
+
+#dashboard
+  .row
+    .col-lg-1
+    .col-lg-10
+      h2 SensorWeb3 Client Test
+
+  .row
+    .col-lg-1
+    .col-lg-4
+      .input-group
+        span.input-group-addon WebBluetooth
+    .col-lg-2
+      button.btn.btn-primary#run(onclick='window.run_test()') Run
+
+  .row
+    .col-lg-1
+    .col-lg-10
+      #terminal
+
+
