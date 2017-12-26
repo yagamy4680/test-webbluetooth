@@ -22,11 +22,61 @@ LOAD_JAVASCRIPT = (url, location, ready-callback) ->
   script.onreadystatechange = ready-callback
   location.append script
 
+GET_PROPERTIES = (c) ->
+  xs = [ (k.toUpperCase!) for k, v of c.properties when v]
+  return "[#{xs.join ', '}]"
+
+SIMPLE_ID = (uuid) ->
+  return ((uuid.split '-').join '').to-lower-case!
+
+DATA_UPDATED = (characteristic, evt) ->
+  {uuid} = characteristic-map
+  {target} = evt
+  {value} = target
+  xs = [ (value.getUint8 i) for i from 0 to (value.byteLength - 1) ]
+  data = new Buffer xs
+  temperature = -46.85 + 175.72 / 65536.0 * data.readUInt16LE 0
+  humidity = -6.0 + 125.0 / 65536.0 * ((data.readUInt16LE 2) .&. ~0x0003)
+  return console.log "DATA_UPDATED: temperature=#{temperature.to-fixed 2}, humidity=#{humidity.to-fixed 2}, (data: #{data.to-string 'hex'})"
+
+
+SERVICE_UUID = \f000aa20-0451-4000-b000-000000000000
+HUMIDITY_CONFIG_UUID = \f000aa2204514000b000000000000000
+HUMIDITY_DATA_UUID = \f000aa2104514000b000000000000000
+
 RUN_TEST = ->
-  console.log "yes, test02 is running ..."
-  p = navigator.bluetooth.requestDevice {acceptAllDevices: yes}
-      .then (device) -> console.log "found device: #{device.name}"
-      .catch (err) -> console.log "failed scan device: #{err}"
+  opts =
+    acceptAllDevices: yes
+    optionalServices: [SERVICE_UUID]
+  console.log "scanning opts: #{JSON.stringify opts}"
+  p = navigator.bluetooth.requestDevice opts
+      .then (device) ->
+        console.log "found device: #{device.name}, and try to connect ..."
+        return device.gatt.connect!
+      .then (server) ->
+        console.log "connected, and try to discover services ..."
+        return server.getPrimaryServices!
+      .then (services) ->
+        console.log "discovered #{services.length} services, then discover characteristics ..."
+        return if services.length <= 0
+        return services[0].getCharacteristics!
+      .then (characteristics) ->
+        console.log "discovered #{characteristics.length} characteristics"
+        for let c, i in characteristics
+          console.log "chars[#{i}]: #{c.uuid} => #{GET_PROPERTIES c}"
+        window.characteristic-map = {[(SIMPLE_ID c.uuid), c] for c in characteristics}
+        data-c = characteristic-map[HUMIDITY_DATA_UUID]
+        return data-c.startNotifications!
+      .then (data-c) ->
+        data-c.addEventListener \characteristicvaluechanged, (evt) -> return DATA_UPDATED data-c, evt
+        console.log "#{HUMIDITY_DATA_UUID} notification is started ..."
+        {characteristic-map} = window
+        enabled = Uint8Array.of 1
+        data-config = characteristic-map[HUMIDITY_CONFIG_UUID]
+        return data-config.writeValue enabled
+      .then (data-config) ->
+        console.log "#{HUMIDITY_CONFIG_UUID} is written with 1 to enable SensorTag notification ..."
+      .catch (err) -> console.log "failed. error => #{err}"
   return
 
 
